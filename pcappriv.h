@@ -1,3 +1,6 @@
+#ifndef _pcappriv_h_
+#define _pcappriv_h_
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -24,10 +27,7 @@
 
 #define DEBUG 0
 
-void set_signal (int sig);
-void sig_handler (int sig);
-
-int caught_signal = 0;
+int caught_signal;
 
 /* pcap v2.4 global header */
 struct pcap_hdr_s {
@@ -55,4 +55,19 @@ struct pcap_pkt {
 	struct ip ip4;
 	struct ip6_hdr ip6;
 };
+
+
+void set_signal (int);
+void sig_handler (int);
+
+void set_global_pcaphdr (struct pcap_hdr_s *, const char *);
+void set_pcaphdr (struct pcap_pkt *, const char *);
+void set_ethhdr (struct pcap_pkt *, const char *);
+void set_ip4hdr (struct pcap_pkt *, const char *);
+void set_ip6hdr (struct pcap_pkt *, const char *);
+
+int get_hash (const struct pcap_pkt *, unsigned int);
+
+
+#endif
 
