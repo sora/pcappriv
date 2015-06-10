@@ -1,6 +1,7 @@
 prog := pcappriv
 
-objs := $(prog).o
+srcs := $(wildcard *.c)
+objs := $(srcs:.c=.o)
 
 CC := gcc
 CFLAGS := -Wall
