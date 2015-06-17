@@ -35,6 +35,24 @@
 #define pr_debug(S, ...) if(debug) fprintf(stderr, \
                      "\x1b[1m\x1b[90mdebug:\x1b[0m " S "\n", ##__VA_ARGS__)
 
+#define INFO_ETH(X) \
+pr_debug("INFO_ETH> " \
+	"ether_dhost: %02x:%02x:%02x:%02x:%02x:%02x, " \
+	"ether_shost: %02x:%02x:%02x:%02x:%02x:%02x, " \
+	"ether_type: %04x", \
+	(unsigned char)X.eth.ether_dhost[0], (unsigned char)X.eth.ether_dhost[1], \
+	(unsigned char)X.eth.ether_dhost[2], (unsigned char)X.eth.ether_dhost[3], \
+	(unsigned char)X.eth.ether_dhost[4], (unsigned char)X.eth.ether_dhost[5], \
+	(unsigned char)X.eth.ether_shost[0], (unsigned char)X.eth.ether_shost[1], \
+	(unsigned char)X.eth.ether_shost[2], (unsigned char)X.eth.ether_shost[3], \
+	(unsigned char)X.eth.ether_shost[4], (unsigned char)X.eth.ether_shost[5], \
+	X.eth.ether_type);
+
+#define INFO_IP4(X) \
+pr_debug("INFO_IP4> " \
+	"ver:%d, len:%d, proto:%X, srcip:%s, dstip:%s", \
+	(int)X.ip4.ip_v, (int)ntohs(X.ip4.ip_len), X.ip4.ip_p, \
+	inet_ntoa(X.ip4.ip_src), inet_ntoa(X.ip4.ip_dst));
 
 int caught_signal;
 
@@ -113,19 +131,21 @@ static inline void set_ethhdr(struct pcap_pkt *pkt, const char *buf)
 	struct ether_header *eth;
 	eth = &pkt->eth;
 
-	eth->ether_dhost[5] = *(char *)buf; ++buf;
-	eth->ether_dhost[4] = *(char *)buf; ++buf;
-	eth->ether_dhost[3] = *(char *)buf; ++buf;
-	eth->ether_dhost[2] = *(char *)buf; ++buf;
-	eth->ether_dhost[1] = *(char *)buf; ++buf;
-	eth->ether_dhost[0] = *(char *)buf; ++buf;
-	eth->ether_shost[5] = *(char *)buf; ++buf;
-	eth->ether_shost[4] = *(char *)buf; ++buf;
-	eth->ether_shost[3] = *(char *)buf; ++buf;
-	eth->ether_shost[2] = *(char *)buf; ++buf;
-	eth->ether_shost[1] = *(char *)buf; ++buf;
-	eth->ether_shost[0] = *(char *)buf; ++buf;
-	eth->ether_type = ntohs(*(short *)buf);
+	eth->ether_dhost[5] = buf[0x0];
+	eth->ether_dhost[4] = buf[0x1];
+	eth->ether_dhost[3] = buf[0x2];
+	eth->ether_dhost[2] = buf[0x3];
+	eth->ether_dhost[1] = buf[0x4];
+	eth->ether_dhost[0] = buf[0x5];
+
+	eth->ether_shost[5] = buf[0x6];
+	eth->ether_shost[4] = buf[0x7];
+	eth->ether_shost[3] = buf[0x8];
+	eth->ether_shost[2] = buf[0x9];
+	eth->ether_shost[1] = buf[0xa];
+	eth->ether_shost[0] = buf[0xb];
+
+	eth->ether_type = ntohs(*(short *)&buf[0xc]);
 }
 
 /*

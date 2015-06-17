@@ -109,17 +109,12 @@ int main(int argc, char *argv[])
 		if (read(ifd, ibuf, pkt.pcap.orig_len) <= 0)
 			break;
 		set_ethhdr(&pkt, (char *)ibuf);
+		INFO_ETH(pkt);
 
 		// ipv4 header
 		if (pkt.eth.ether_type == ETHERTYPE_IP) {
 			set_ip4hdr(&pkt, (char *)ibuf + ETHER_HDR_LEN);
-			//pkt.ip4.ip_src.s_addr &= htonl(mask.s_addr);
-			//strcpy(fname, inet_ntoa(pkt.ip4.ip_src));
-
-			pr_debug("ip4> ver:%d, len:%d, proto:%X, srcip:%s, dstip:%s, mask:%s",
-			         (int)pkt.ip4.ip_v, (int)ntohs(pkt.ip4.ip_len), pkt.ip4.ip_p,
-			         inet_ntoa(pkt.ip4.ip_src), inet_ntoa(pkt.ip4.ip_src),
-			         inet_ntoa(pkt.ip4.ip_src));
+			INFO_IP4(pkt);
 
 		// ipv6 header
 		} else if (pkt.eth.ether_type == ETHERTYPE_IPV6) {
@@ -142,7 +137,7 @@ int main(int argc, char *argv[])
 			ofd = create_pcapfile(fname, &pcap_ghdr);
 			if (ofd == -1) {
 				pr_err("cannot create pcap file.");
-				goto out;
+				break;
 			}
 		}
 
@@ -150,11 +145,11 @@ int main(int argc, char *argv[])
 		ofd = write_pktdata(fname, &ibuf[0], &pkt);
 		if (ofd == -1) {
 			pr_err("cannot write pcap file,");
-			goto out;
+			break;
 		}
 
 		if (caught_signal)
-			goto out;
+			break;
 	}
 
 out:
