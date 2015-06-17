@@ -1,5 +1,48 @@
 #include "pcappriv.h"
 
+/*
+ * create_pcapfile
+ */
+static inline int create_pcapfile(char *fname, struct pcap_hdr_s *pcap_ghdr)
+{
+	int fd;
+
+	// create pcap file
+	fd = creat(fname, 0666);
+	if (fd != -1) {
+		// write pcap global header
+		write(fd, pcap_ghdr, sizeof(struct pcap_hdr_s));
+		close(fd);
+	}
+
+	return fd;
+}
+
+/*
+ * write_pktdata
+ */
+static inline int write_pktdata(char *fname, unsigned char *buf, struct pcap_pkt *pkt)
+{
+	int fd;
+
+	// open pcap file
+	fd = open(fname, O_WRONLY | O_APPEND);
+	if (fd != -1) {
+		// write pcap packet header
+		write(fd, &pkt->pcap, sizeof(pkt->pcap));
+
+		// write packet data
+		write(fd, buf, pkt->pcap.orig_len);
+		close(fd);
+	}
+
+	return fd;
+}
+
+
+/*
+ * main
+ */
 int main(int argc, char *argv[])
 {
 	struct pcap_hdr_s pcap_ghdr;
@@ -38,26 +81,25 @@ int main(int argc, char *argv[])
 	}
 
 	set_global_pcaphdr(&pcap_ghdr, (char *)ibuf);
-	if (pcap_ghdr.magic_number != PCAP_MAGIC) {
-		printf("unsupported pcap format: pcap_ghdr.magic_number=%X\n",
-				(int)pcap_ghdr.magic_number);
-		return 1;
-	}
-	if (pcap_ghdr.version_major != PCAP_VERSION_MAJOR) {
-		printf("unsupported pcap format: pcap_ghdr.version_major=%X\n",
-				(int)pcap_ghdr.version_major);
-		return 1;
-	}
-	if (pcap_ghdr.version_minor != PCAP_VERSION_MINOR) {
-		printf("unsupported pcap format: pcap_ghdr.version_minor=%X\n",
-				(int)pcap_ghdr.version_minor);
-		return 1;
+	if ((pcap_ghdr.magic_number != PCAP_MAGIC)          ||
+	    (pcap_ghdr.version_major != PCAP_VERSION_MAJOR) ||
+	    (pcap_ghdr.version_minor != PCAP_VERSION_MINOR)) {
+		printf("unsupported pcap format:\n"
+		       "\tpcap_ghdr.magic_number=%X\n"
+		       "\tpcap_ghdr.version_major=%X\n"
+		       "\tpcap_ghdr.version_minor=%X\n",
+		       (int)pcap_ghdr.magic_number, (int)pcap_ghdr.version_major,
+		       (int)pcap_ghdr.version_minor);
+		goto out;
 	}
 
 	while (1) {
+
 		// pcap header
 		if (read(ifd, ibuf, sizeof(struct pcaprec_hdr_s)) <= 0)
 			break;
+
+		// checking packet size
 		set_pcaphdr(&pkt, (char *)ibuf);
 		if ((pkt.pcap.orig_len < PKT_SIZE_MIN) || (pkt.pcap.orig_len > PKT_SIZE_MAX)) {
 			printf("[warn] frame length: frame_len=%d\n", (int)pkt.pcap.orig_len);
@@ -84,26 +126,32 @@ int main(int argc, char *argv[])
 			set_ip6hdr(&pkt, (char *)ibuf + ETHER_HDR_LEN);
 		// ARP
 		} else if (pkt.eth.ether_type == ETHERTYPE_ARP) {
-			;
+			set_arp(&pkt, (char *)ibuf + ETHER_HDR_LEN);
+		// unknown Ethernet Type
+		} else {
+			// temp: debug
+			printf("EtherType: %04X is not supported\n", pkt.eth.ether_type);
 		}
 
-		//
+		// get pcap file name
 		sprintf(fname, "%d", get_hash(&pkt, subnet));
 		strcat(fname, ".pcap");
 
-		// make pcap file
+		// create pcap file
 		if ((stat(fname, &st)) != 0) {
-			printf("make file\n");
-			ofd = open(fname, O_WRONLY | O_CREAT, 0666);
-			write(ofd, &pcap_ghdr, sizeof(struct pcap_hdr_s));
-			close(ofd);
+			ofd = create_pcapfile(fname, &pcap_ghdr);
+			if (ofd == -1) {
+				pr_err("cannot create pcap file.\n");
+				goto out;
+			}
 		}
 
 		// write packet data
-		ofd = open(fname, O_WRONLY | O_APPEND);
-		write(ofd, &pkt.pcap, sizeof(pkt.pcap));
-		write(ofd, ibuf, pkt.pcap.orig_len);
-		close(ofd);
+		ofd = write_pktdata(fname, &ibuf[0], &pkt);
+		if (ofd == -1) {
+			pr_err("cannot write pcap file,\n");
+			goto out;
+		}
 
 		if (caught_signal)
 			goto out;
