@@ -116,10 +116,10 @@ int main(int argc, char *argv[])
 			//pkt.ip4.ip_src.s_addr &= htonl(mask.s_addr);
 			//strcpy(fname, inet_ntoa(pkt.ip4.ip_src));
 
-			D("ip4> ver:%d, len:%d, proto:%X, srcip:%s, dstip:%s, mask:%s",
-			  (int)pkt.ip4.ip_v, (int)ntohs(pkt.ip4.ip_len), pkt.ip4.ip_p,
-			  inet_ntoa(pkt.ip4.ip_src), inet_ntoa(pkt.ip4.ip_src),
-			  inet_ntoa(pkt.ip4.ip_src));
+			pr_debug("ip4> ver:%d, len:%d, proto:%X, srcip:%s, dstip:%s, mask:%s",
+			         (int)pkt.ip4.ip_v, (int)ntohs(pkt.ip4.ip_len), pkt.ip4.ip_p,
+			         inet_ntoa(pkt.ip4.ip_src), inet_ntoa(pkt.ip4.ip_src),
+			         inet_ntoa(pkt.ip4.ip_src));
 
 		// ipv6 header
 		} else if (pkt.eth.ether_type == ETHERTYPE_IPV6) {
