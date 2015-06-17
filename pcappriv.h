@@ -27,6 +27,8 @@
 #define BITMASK4(v)	(((1 << (v)) - 1) << (32 - (v)))
 
 #define pr_err(...)    fprintf(stderr, __VA_ARGS__)
+#define pr_warn(...)    fprintf(stderr, __VA_ARGS__)
+
 #define debug 0
 #define D(...)    if(debug) fprintf(stderr, __VA_ARGS__)
 
