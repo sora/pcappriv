@@ -24,13 +24,17 @@
 #define PKT_SIZE_MAX    (0x1FFF)
 #define PKT_SIZE_MIN    (0x1F)
 
+#define debug 1
+
 #define BITMASK4(v)	(((1 << (v)) - 1) << (32 - (v)))
 
-#define pr_err(...)    fprintf(stderr, __VA_ARGS__)
-#define pr_warn(...)    fprintf(stderr, __VA_ARGS__)
+#define pr_err(S, ...) fprintf(stderr, \
+                     "\x1b[1m\x1b[31merror:\x1b[0m " S "\n", ##__VA_ARGS__)
+#define pr_warn(S, ...) fprintf(stderr, \
+                     "\x1b[1m\x1b[33mwarning:\x1b[0m " S "\n", ##__VA_ARGS__)
+#define D(S, ...)    if(debug)  fprintf(stderr, \
+                     "\x1b[1m\x1b[90mdebug:\x1b[0m " S "\n", ##__VA_ARGS__)
 
-#define debug 0
-#define D(...)    if(debug) fprintf(stderr, __VA_ARGS__)
 
 int caught_signal;
 

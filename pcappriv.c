@@ -55,20 +55,20 @@ int main(int argc, char *argv[])
 	unsigned int subnet = 24;
 
 	if (!(argc == 2 || argc == 3)) {
-		printf("Usage: ./split_pcap ./recv.pcap 24: argc=%d\n", argc);
+		pr_err("Usage: ./split_pcap ./recv.pcap 24: argc=%d", argc);
 		return 1;
 	}
 	if (argc == 3)
 		subnet = atoi(argv[2]);
 	if (subnet >= 32) {
-		printf("subnet is wrong format: %d\n", subnet);
+		pr_err("subnet is wrong format: %d", subnet);
 		return 1;
 	}
 
 
 	ifd = open(argv[1], O_RDONLY);
 	if (ifd < 0) {
-		fprintf(stderr, "cannot open pcap file: %s\n", argv[1]);
+		pr_err("cannot open pcap file: %s", argv[1]);
 		return 1;
 	}
 
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
 	// check global pcap header
 	if (read(ifd, ibuf, sizeof(struct pcap_hdr_s)) <= 0) {
-		fprintf(stderr, "input file is too short\n");
+		pr_err("input file is too short");
 		return 1;
 	}
 
@@ -84,10 +84,10 @@ int main(int argc, char *argv[])
 	if ((pcap_ghdr.magic_number != PCAP_MAGIC)          ||
 	    (pcap_ghdr.version_major != PCAP_VERSION_MAJOR) ||
 	    (pcap_ghdr.version_minor != PCAP_VERSION_MINOR)) {
-		printf("unsupported pcap format:\n"
+		pr_err("unsupported pcap format:\n"
 		       "\tpcap_ghdr.magic_number=%X\n"
 		       "\tpcap_ghdr.version_major=%X\n"
-		       "\tpcap_ghdr.version_minor=%X\n",
+		       "\tpcap_ghdr.version_minor=%X",
 		       (int)pcap_ghdr.magic_number, (int)pcap_ghdr.version_major,
 		       (int)pcap_ghdr.version_minor);
 		goto out;
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 		// checking packet size
 		set_pcaphdr(&pkt, (char *)ibuf);
 		if ((pkt.pcap.orig_len < PKT_SIZE_MIN) || (pkt.pcap.orig_len > PKT_SIZE_MAX)) {
-			printf("[warn] frame length: frame_len=%d\n", (int)pkt.pcap.orig_len);
+			pr_warn("frame length: frame_len=%d", (int)pkt.pcap.orig_len);
 		}
 
 		// ethernet header
@@ -115,12 +115,12 @@ int main(int argc, char *argv[])
 			set_ip4hdr(&pkt, (char *)ibuf + ETHER_HDR_LEN);
 			//pkt.ip4.ip_src.s_addr &= htonl(mask.s_addr);
 			//strcpy(fname, inet_ntoa(pkt.ip4.ip_src));
-#if DEBUG
-			printf("ip4> ver:%d, len:%d, proto:%X, srcip:%s, dstip:%s\n",
-					(int)pkt.ip4.ip_v, (int)ntohs(pkt.ip4.ip_len), pkt.ip4.ip_p,
-					inet_ntoa(pkt.ip4.ip_src), inet_ntoa(pkt.ip4.ip_src));
-			printf("ip4> mask:%s\n", inet_ntoa(pkt.ip4.ip_src));
-#endif
+
+			D("ip4> ver:%d, len:%d, proto:%X, srcip:%s, dstip:%s, mask:%s",
+			  (int)pkt.ip4.ip_v, (int)ntohs(pkt.ip4.ip_len), pkt.ip4.ip_p,
+			  inet_ntoa(pkt.ip4.ip_src), inet_ntoa(pkt.ip4.ip_src),
+			  inet_ntoa(pkt.ip4.ip_src));
+
 		// ipv6 header
 		} else if (pkt.eth.ether_type == ETHERTYPE_IPV6) {
 			set_ip6hdr(&pkt, (char *)ibuf + ETHER_HDR_LEN);
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 		// unknown Ethernet Type
 		} else {
 			// temp: debug
-			printf("EtherType: %04X is not supported\n", pkt.eth.ether_type);
+			pr_warn("EtherType: %04X is not supported", pkt.eth.ether_type);
 		}
 
 		// get pcap file name
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 		if ((stat(fname, &st)) != 0) {
 			ofd = create_pcapfile(fname, &pcap_ghdr);
 			if (ofd == -1) {
-				pr_err("cannot create pcap file.\n");
+				pr_err("cannot create pcap file.");
 				goto out;
 			}
 		}
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
 		// write packet data
 		ofd = write_pktdata(fname, &ibuf[0], &pkt);
 		if (ofd == -1) {
-			pr_err("cannot write pcap file,\n");
+			pr_err("cannot write pcap file,");
 			goto out;
 		}
 
