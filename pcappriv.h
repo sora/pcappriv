@@ -40,12 +40,12 @@ pr_debug("INFO_ETH> " \
 	"ether_dhost: %02x:%02x:%02x:%02x:%02x:%02x, " \
 	"ether_shost: %02x:%02x:%02x:%02x:%02x:%02x, " \
 	"ether_type: %04x", \
-	(unsigned char)X.eth.ether_dhost[0], (unsigned char)X.eth.ether_dhost[1], \
-	(unsigned char)X.eth.ether_dhost[2], (unsigned char)X.eth.ether_dhost[3], \
-	(unsigned char)X.eth.ether_dhost[4], (unsigned char)X.eth.ether_dhost[5], \
-	(unsigned char)X.eth.ether_shost[0], (unsigned char)X.eth.ether_shost[1], \
-	(unsigned char)X.eth.ether_shost[2], (unsigned char)X.eth.ether_shost[3], \
-	(unsigned char)X.eth.ether_shost[4], (unsigned char)X.eth.ether_shost[5], \
+	(unsigned char)X.eth.ether_dhost[5], (unsigned char)X.eth.ether_dhost[4], \
+	(unsigned char)X.eth.ether_dhost[3], (unsigned char)X.eth.ether_dhost[2], \
+	(unsigned char)X.eth.ether_dhost[1], (unsigned char)X.eth.ether_dhost[0], \
+	(unsigned char)X.eth.ether_shost[5], (unsigned char)X.eth.ether_shost[4], \
+	(unsigned char)X.eth.ether_shost[3], (unsigned char)X.eth.ether_shost[2], \
+	(unsigned char)X.eth.ether_shost[1], (unsigned char)X.eth.ether_shost[0], \
 	X.eth.ether_type);
 
 #define INFO_IP4(X) \
