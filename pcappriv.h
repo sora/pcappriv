@@ -31,7 +31,7 @@
 #define pr_err(S, ...) fprintf(stderr, \
                      "\x1b[1m\x1b[31merror:\x1b[0m " S "\n", ##__VA_ARGS__)
 #define pr_warn(S, ...) fprintf(stderr, \
-                     "\x1b[1m\x1b[33mwarning:\x1b[0m " S "\n", ##__VA_ARGS__)
+                     "\x1b[1m\x1b[33mwarnn:\x1b[0m " S "\n", ##__VA_ARGS__)
 #define pr_debug(S, ...) if(debug) fprintf(stderr, \
                      "\x1b[1m\x1b[90mdebug:\x1b[0m " S "\n", ##__VA_ARGS__)
 
@@ -89,21 +89,15 @@ struct pcap_pkt {
  */
 static inline void set_global_pcaphdr(struct pcap_hdr_s *ghdr, const char *buf)
 {
-	const char *ptr = buf;
+	const struct pcap_hdr_s *h = (struct pcap_hdr_s *)buf;
 
-	ghdr->magic_number = *(unsigned int *)ptr;
-	ptr += sizeof(ghdr->magic_number);
-	ghdr->version_major = *(unsigned short *)ptr;
-	ptr += sizeof(ghdr->version_major);
-	ghdr->version_minor = *(unsigned short *)ptr;
-	ptr += sizeof(ghdr->version_minor);
-	ghdr->thiszone = *(int *)ptr;
-	ptr += sizeof(ghdr->thiszone);
-	ghdr->sigfigs = *(unsigned int *)ptr;
-	ptr += sizeof(ghdr->sigfigs);
-	ghdr->snaplen = *(unsigned int *)ptr;
-	ptr += sizeof(ghdr->snaplen);
-	ghdr->network = *(unsigned int *)ptr;
+	ghdr->magic_number  = h->magic_number;
+	ghdr->version_major = h->version_major;
+	ghdr->version_minor = h->version_minor;
+	ghdr->thiszone      = h->thiszone;
+	ghdr->sigfigs       = h->sigfigs;
+	ghdr->snaplen       = h->snaplen;
+	ghdr->network       = h->network;
 }
 
 /*
@@ -111,16 +105,12 @@ static inline void set_global_pcaphdr(struct pcap_hdr_s *ghdr, const char *buf)
  */
 static inline void set_pcaphdr(struct pcap_pkt *pkt, const char *buf)
 {
-	struct pcaprec_hdr_s *pcap;
-	pcap = &pkt->pcap;
+	const struct pcaprec_hdr_s *h = (struct pcaprec_hdr_s *)buf;
 
-	pcap->ts_sec = *(unsigned int *)buf;
-	buf += sizeof(pcap->ts_sec);
-	pcap->ts_usec = *(unsigned short *)buf;
-	buf += sizeof(pcap->ts_usec);
-	pcap->incl_len = *(unsigned short *)buf;
-	buf += sizeof(pcap->incl_len);
-	pcap->orig_len = *(int *)buf;
+	pkt->pcap.ts_sec   = h->ts_sec;
+	pkt->pcap.ts_usec  = h->ts_usec;
+	pkt->pcap.incl_len = h->incl_len;
+	pkt->pcap.orig_len = h->orig_len;
 }
 
 /*
@@ -128,24 +118,21 @@ static inline void set_pcaphdr(struct pcap_pkt *pkt, const char *buf)
  */
 static inline void set_ethhdr(struct pcap_pkt *pkt, const char *buf)
 {
-	struct ether_header *eth;
-	eth = &pkt->eth;
+	pkt->eth.ether_dhost[5] = buf[0x0];
+	pkt->eth.ether_dhost[4] = buf[0x1];
+	pkt->eth.ether_dhost[3] = buf[0x2];
+	pkt->eth.ether_dhost[2] = buf[0x3];
+	pkt->eth.ether_dhost[1] = buf[0x4];
+	pkt->eth.ether_dhost[0] = buf[0x5];
 
-	eth->ether_dhost[5] = buf[0x0];
-	eth->ether_dhost[4] = buf[0x1];
-	eth->ether_dhost[3] = buf[0x2];
-	eth->ether_dhost[2] = buf[0x3];
-	eth->ether_dhost[1] = buf[0x4];
-	eth->ether_dhost[0] = buf[0x5];
+	pkt->eth.ether_shost[5] = buf[0x6];
+	pkt->eth.ether_shost[4] = buf[0x7];
+	pkt->eth.ether_shost[3] = buf[0x8];
+	pkt->eth.ether_shost[2] = buf[0x9];
+	pkt->eth.ether_shost[1] = buf[0xa];
+	pkt->eth.ether_shost[0] = buf[0xb];
 
-	eth->ether_shost[5] = buf[0x6];
-	eth->ether_shost[4] = buf[0x7];
-	eth->ether_shost[3] = buf[0x8];
-	eth->ether_shost[2] = buf[0x9];
-	eth->ether_shost[1] = buf[0xa];
-	eth->ether_shost[0] = buf[0xb];
-
-	eth->ether_type = ntohs(*(short *)&buf[0xc]);
+	pkt->eth.ether_type = ntohs(*(short *)&buf[0xc]);
 }
 
 /*
@@ -153,19 +140,13 @@ static inline void set_ethhdr(struct pcap_pkt *pkt, const char *buf)
  */
 static inline void set_ip4hdr(struct pcap_pkt *pkt, const char *buf)
 {
-	struct ip *ip4;
-	ip4 = &pkt->ip4;
+	const struct ip *p = (struct ip *)buf;
 
-	ip4->ip_v = (*(unsigned char *)buf >> 4) & 0xF;
-	buf += sizeof(unsigned char) + sizeof(ip4->ip_tos);
-	ip4->ip_len = *(unsigned short *)buf;
-	buf += sizeof(ip4->ip_len) + sizeof(ip4->ip_id) + sizeof(ip4->ip_off) +
-			sizeof(ip4->ip_ttl);
-	ip4->ip_p = *(unsigned char *)buf;
-	buf += sizeof(ip4->ip_p) + sizeof(ip4->ip_sum);
-	ip4->ip_src = *(struct in_addr *)buf;
-	buf += sizeof(ip4->ip_src);
-	ip4->ip_dst = *(struct in_addr *)buf;
+	pkt->ip4.ip_v   = p->ip_v;
+	pkt->ip4.ip_len = p->ip_len;
+	pkt->ip4.ip_p   = p->ip_p;
+	pkt->ip4.ip_src = p->ip_src;
+	pkt->ip4.ip_dst = p->ip_dst;
 }
 
 /*
@@ -173,18 +154,12 @@ static inline void set_ip4hdr(struct pcap_pkt *pkt, const char *buf)
  */
 static inline void set_ip6hdr(struct pcap_pkt *pkt, const char *buf)
 {
-	struct ip6_hdr *ip6;
-	ip6 = &pkt->ip6;
+	const struct ip6_hdr *p = (struct ip6_hdr *)buf;
 
-	ip6->ip6_ctlun.ip6_un2_vfc = *(unsigned int *)buf;
-	buf += sizeof(ip6->ip6_ctlun.ip6_un2_vfc) + sizeof(ip6->ip6_ctlun.ip6_un1.ip6_un1_flow);
-	ip6->ip6_ctlun.ip6_un1.ip6_un1_plen = *(unsigned short *)buf;
-	buf += sizeof(ip6->ip6_ctlun.ip6_un1.ip6_un1_plen)+
-			sizeof(ip6->ip6_ctlun.ip6_un1.ip6_un1_nxt) +
-			sizeof(ip6->ip6_ctlun.ip6_un1.ip6_un1_hlim);
-	ip6->ip6_src = *(struct in6_addr *)buf;
-	buf += sizeof(ip6->ip6_src);
-	ip6->ip6_dst = *(struct in6_addr *)buf;
+	pkt->ip6.ip6_ctlun.ip6_un2_vfc          = p->ip6_ctlun.ip6_un2_vfc;
+	pkt->ip6.ip6_ctlun.ip6_un1.ip6_un1_plen = p->ip6_ctlun.ip6_un1.ip6_un1_plen;
+	pkt->ip6.ip6_src                        = p->ip6_src;
+	pkt->ip6.ip6_dst                        = p->ip6_dst;
 }
 
 /*
@@ -192,19 +167,13 @@ static inline void set_ip6hdr(struct pcap_pkt *pkt, const char *buf)
  */
 static inline void set_arp(struct pcap_pkt *pkt, const char *buf)
 {
-	struct ip *ip4;
-	ip4 = &pkt->ip4;
+	const struct ip *p = (struct ip *)buf;
 
-	ip4->ip_v = (*(unsigned char *)buf >> 4) & 0xF;
-	buf += sizeof(unsigned char) + sizeof(ip4->ip_tos);
-	ip4->ip_len = *(unsigned short *)buf;
-	buf += sizeof(ip4->ip_len) + sizeof(ip4->ip_id) + sizeof(ip4->ip_off) +
-			sizeof(ip4->ip_ttl);
-	ip4->ip_p = *(unsigned char *)buf;
-	buf += sizeof(ip4->ip_p) + sizeof(ip4->ip_sum);
-	ip4->ip_src = *(struct in_addr *)buf;
-	buf += sizeof(ip4->ip_src);
-	ip4->ip_dst = *(struct in_addr *)buf;
+	pkt->ip4.ip_v   = p->ip_v;
+	pkt->ip4.ip_len = p->ip_len;
+	pkt->ip4.ip_p   = p->ip_p;
+	pkt->ip4.ip_src = p->ip_src;
+	pkt->ip4.ip_dst = p->ip_dst;
 }
 
 
