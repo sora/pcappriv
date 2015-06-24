@@ -216,7 +216,5 @@ void sig_handler (int);
 
 int get_hash (const struct pcap_pkt *, unsigned int);
 
-void INFO_IP4(struct ip *);
-
 #endif
 
