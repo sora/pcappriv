@@ -65,14 +65,11 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-
 	ifd = open(argv[1], O_RDONLY);
 	if (ifd < 0) {
 		pr_err("cannot open pcap file: %s", argv[1]);
 		return 1;
 	}
-
-	set_signal(SIGINT);
 
 	// check global pcap header
 	if (read(ifd, ibuf, sizeof(struct pcap_hdr_s)) <= 0) {
@@ -92,6 +89,8 @@ int main(int argc, char *argv[])
 		       (int)pcap_ghdr.version_minor);
 		goto out;
 	}
+
+	set_signal(SIGINT);
 
 	while (1) {
 
@@ -121,8 +120,8 @@ int main(int argc, char *argv[])
 			set_ip6hdr(&pkt.ip6, (char *)ibuf + ETHER_HDR_LEN);
 			INFO_IP6(&pkt.ip6);
 		// ARP
-		} else if (pkt.eth.ether_type == ETHERTYPE_ARP) {
-			set_arp(&pkt, (char *)ibuf + ETHER_HDR_LEN);
+		//} else if (pkt.eth.ether_type == ETHERTYPE_ARP) {
+		//	set_arp(&pkt, (char *)ibuf + ETHER_HDR_LEN);
 		// unknown Ethernet Type
 		} else {
 			// temp: debug
