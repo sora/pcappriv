@@ -137,63 +137,63 @@ static inline void set_global_pcaphdr(struct pcap_hdr_s *ghdr, const char *buf)
 /*
  * set_pcaphdr
  */
-static inline void set_pcaphdr(struct pcap_pkt *pkt, const char *buf)
+static inline void set_pcaphdr(struct pcaprec_hdr_s *pcap, const char *buf)
 {
 	const struct pcaprec_hdr_s *h = (struct pcaprec_hdr_s *)buf;
 
-	pkt->pcap.ts_sec   = h->ts_sec;
-	pkt->pcap.ts_usec  = h->ts_usec;
-	pkt->pcap.incl_len = h->incl_len;
-	pkt->pcap.orig_len = h->orig_len;
+	pcap->ts_sec   = h->ts_sec;
+	pcap->ts_usec  = h->ts_usec;
+	pcap->incl_len = h->incl_len;
+	pcap->orig_len = h->orig_len;
 }
 
 /*
  * set_ethhdr
  */
-static inline void set_ethhdr(struct pcap_pkt *pkt, const char *buf)
+static inline void set_ethhdr(struct ether_header *eth, const char *buf)
 {
-	pkt->eth.ether_dhost[5] = buf[0x0];
-	pkt->eth.ether_dhost[4] = buf[0x1];
-	pkt->eth.ether_dhost[3] = buf[0x2];
-	pkt->eth.ether_dhost[2] = buf[0x3];
-	pkt->eth.ether_dhost[1] = buf[0x4];
-	pkt->eth.ether_dhost[0] = buf[0x5];
+	eth->ether_dhost[5] = buf[0x0];
+	eth->ether_dhost[4] = buf[0x1];
+	eth->ether_dhost[3] = buf[0x2];
+	eth->ether_dhost[2] = buf[0x3];
+	eth->ether_dhost[1] = buf[0x4];
+	eth->ether_dhost[0] = buf[0x5];
 
-	pkt->eth.ether_shost[5] = buf[0x6];
-	pkt->eth.ether_shost[4] = buf[0x7];
-	pkt->eth.ether_shost[3] = buf[0x8];
-	pkt->eth.ether_shost[2] = buf[0x9];
-	pkt->eth.ether_shost[1] = buf[0xa];
-	pkt->eth.ether_shost[0] = buf[0xb];
+	eth->ether_shost[5] = buf[0x6];
+	eth->ether_shost[4] = buf[0x7];
+	eth->ether_shost[3] = buf[0x8];
+	eth->ether_shost[2] = buf[0x9];
+	eth->ether_shost[1] = buf[0xa];
+	eth->ether_shost[0] = buf[0xb];
 
-	pkt->eth.ether_type = ntohs(*(short *)&buf[0xc]);
+	eth->ether_type = ntohs(*(short *)&buf[0xc]);
 }
 
 /*
  * set_ip4hdr
  */
-static inline void set_ip4hdr(struct pcap_pkt *pkt, const char *buf)
+static inline void set_ip4hdr(struct ip *ip4, const char *buf)
 {
 	const struct ip *p = (struct ip *)buf;
 
-	pkt->ip4.ip_v   = p->ip_v;
-	pkt->ip4.ip_len = p->ip_len;
-	pkt->ip4.ip_p   = p->ip_p;
-	pkt->ip4.ip_src = p->ip_src;
-	pkt->ip4.ip_dst = p->ip_dst;
+	ip4->ip_v   = p->ip_v;
+	ip4->ip_len = p->ip_len;
+	ip4->ip_p   = p->ip_p;
+	ip4->ip_src = p->ip_src;
+	ip4->ip_dst = p->ip_dst;
 }
 
 /*
  * set_ip6hdr
  */
-static inline void set_ip6hdr(struct pcap_pkt *pkt, const char *buf)
+static inline void set_ip6hdr(struct ip6_hdr *ip6, const char *buf)
 {
 	const struct ip6_hdr *p = (struct ip6_hdr *)buf;
 
-	pkt->ip6.ip6_vfc  = p->ip6_vfc;
-	pkt->ip6.ip6_plen = p->ip6_plen;
-	pkt->ip6.ip6_src  = p->ip6_src;
-	pkt->ip6.ip6_dst  = p->ip6_dst;
+	ip6->ip6_vfc  = p->ip6_vfc;
+	ip6->ip6_plen = p->ip6_plen;
+	ip6->ip6_src  = p->ip6_src;
+	ip6->ip6_dst  = p->ip6_dst;
 }
 
 /*

@@ -95,12 +95,12 @@ int main(int argc, char *argv[])
 
 	while (1) {
 
-		// pcap header
+		// read pcap header
 		if (read(ifd, ibuf, sizeof(struct pcaprec_hdr_s)) <= 0)
 			break;
 
 		// checking packet size
-		set_pcaphdr(&pkt, (char *)ibuf);
+		set_pcaphdr(&pkt.pcap, (char *)ibuf);
 		if ((pkt.pcap.orig_len < PKT_SIZE_MIN) || (pkt.pcap.orig_len > PKT_SIZE_MAX)) {
 			pr_warn("frame length: frame_len=%d", (int)pkt.pcap.orig_len);
 		}
@@ -108,17 +108,17 @@ int main(int argc, char *argv[])
 		// ethernet header
 		if (read(ifd, ibuf, pkt.pcap.orig_len) <= 0)
 			break;
-		set_ethhdr(&pkt, (char *)ibuf);
+		set_ethhdr(&pkt.eth, (char *)ibuf);
 		INFO_ETH(pkt);
 
 		// ipv4 header
 		if (pkt.eth.ether_type == ETHERTYPE_IP) {
-			set_ip4hdr(&pkt, (char *)ibuf + ETHER_HDR_LEN);
+			set_ip4hdr(&pkt.ip4, (char *)ibuf + ETHER_HDR_LEN);
 			INFO_IP4(&pkt.ip4);
 
 		// ipv6 header
 		} else if (pkt.eth.ether_type == ETHERTYPE_IPV6) {
-			set_ip6hdr(&pkt, (char *)ibuf + ETHER_HDR_LEN);
+			set_ip6hdr(&pkt.ip6, (char *)ibuf + ETHER_HDR_LEN);
 			INFO_IP6(&pkt.ip6);
 		// ARP
 		} else if (pkt.eth.ether_type == ETHERTYPE_ARP) {
