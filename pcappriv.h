@@ -48,11 +48,14 @@ pr_debug("INFO_ETH> " \
 	(unsigned char)X.eth.ether_shost[1], (unsigned char)X.eth.ether_shost[0], \
 	X.eth.ether_type);
 
+#if 0
 #define INFO_IP4(X) \
 pr_debug("INFO_IP4> " \
 	"ver:%d, len:%d, proto:%X, srcip:%s, dstip:%s", \
 	(int)X.ip4.ip_v, (int)ntohs(X.ip4.ip_len), X.ip4.ip_p, \
-	inet_ntoa(X.ip4.ip_src), inet_ntoa(X.ip4.ip_dst));
+	Inet_ntop(AF_INET, X.ip4.ip_src), \
+	Inet_ntop(AF_INET, X.ip4.ip_dst));
+#endif
 
 int caught_signal;
 
@@ -83,6 +86,37 @@ struct pcap_pkt {
 	struct ip6_hdr ip6;
 };
 
+/*
+ * INFO_IP4
+ */
+static inline void INFO_IP4(struct ip *ip4)
+{
+	char src[INET_ADDRSTRLEN] = { 0 };
+	char dst[INET_ADDRSTRLEN] = { 0 };
+
+	inet_ntop(AF_INET, &ip4->ip_src, src, sizeof(src));
+	inet_ntop(AF_INET, &ip4->ip_dst, dst, sizeof(dst));
+
+	pr_debug("INFO_IP4> "
+	         "ver:%d, len:%d, proto:%X, srcip:%s, dstip:%s",
+	         (int)ip4->ip_v, (int)ntohs(ip4->ip_len), ip4->ip_p, src, dst);
+}
+
+/*
+ * INFO_IP6
+ */
+static inline void INFO_IP6(struct ip6_hdr *ip6)
+{
+	char src[INET6_ADDRSTRLEN] = { 0 };
+	char dst[INET6_ADDRSTRLEN] = { 0 };
+
+	inet_ntop(AF_INET6, &ip6->ip6_src, src, sizeof(src));
+	inet_ntop(AF_INET6, &ip6->ip6_dst, dst, sizeof(dst));
+
+	pr_debug("INFO_IP6> "
+	         "ver:%d, len:%d, proto:XX, srcip:%s, dstip:%s",
+	         (int)((ip6->ip6_vfc >> 4) & 0xF), (int)ntohs(ip6->ip6_plen), src, dst);
+}
 
 /*
  * set_global_pcaphdr
@@ -156,10 +190,10 @@ static inline void set_ip6hdr(struct pcap_pkt *pkt, const char *buf)
 {
 	const struct ip6_hdr *p = (struct ip6_hdr *)buf;
 
-	pkt->ip6.ip6_ctlun.ip6_un2_vfc          = p->ip6_ctlun.ip6_un2_vfc;
-	pkt->ip6.ip6_ctlun.ip6_un1.ip6_un1_plen = p->ip6_ctlun.ip6_un1.ip6_un1_plen;
-	pkt->ip6.ip6_src                        = p->ip6_src;
-	pkt->ip6.ip6_dst                        = p->ip6_dst;
+	pkt->ip6.ip6_vfc  = p->ip6_vfc;
+	pkt->ip6.ip6_plen = p->ip6_plen;
+	pkt->ip6.ip6_src  = p->ip6_src;
+	pkt->ip6.ip6_dst  = p->ip6_dst;
 }
 
 /*
@@ -182,6 +216,7 @@ void sig_handler (int);
 
 int get_hash (const struct pcap_pkt *, unsigned int);
 
+void INFO_IP4(struct ip *);
 
 #endif
 

@@ -114,11 +114,12 @@ int main(int argc, char *argv[])
 		// ipv4 header
 		if (pkt.eth.ether_type == ETHERTYPE_IP) {
 			set_ip4hdr(&pkt, (char *)ibuf + ETHER_HDR_LEN);
-			INFO_IP4(pkt);
+			INFO_IP4(&pkt.ip4);
 
 		// ipv6 header
 		} else if (pkt.eth.ether_type == ETHERTYPE_IPV6) {
 			set_ip6hdr(&pkt, (char *)ibuf + ETHER_HDR_LEN);
+			INFO_IP6(&pkt.ip6);
 		// ARP
 		} else if (pkt.eth.ether_type == ETHERTYPE_ARP) {
 			set_arp(&pkt, (char *)ibuf + ETHER_HDR_LEN);
