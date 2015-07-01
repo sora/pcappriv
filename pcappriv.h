@@ -40,12 +40,12 @@ pr_debug("INFO_ETH> " \
 	"ether_dhost: %02x:%02x:%02x:%02x:%02x:%02x, " \
 	"ether_shost: %02x:%02x:%02x:%02x:%02x:%02x, " \
 	"ether_type: %04x", \
-	(unsigned char)X.eth.ether_dhost[5], (unsigned char)X.eth.ether_dhost[4], \
-	(unsigned char)X.eth.ether_dhost[3], (unsigned char)X.eth.ether_dhost[2], \
-	(unsigned char)X.eth.ether_dhost[1], (unsigned char)X.eth.ether_dhost[0], \
-	(unsigned char)X.eth.ether_shost[5], (unsigned char)X.eth.ether_shost[4], \
-	(unsigned char)X.eth.ether_shost[3], (unsigned char)X.eth.ether_shost[2], \
-	(unsigned char)X.eth.ether_shost[1], (unsigned char)X.eth.ether_shost[0], \
+	(unsigned char)X.eth.ether_dhost[0], (unsigned char)X.eth.ether_dhost[1], \
+	(unsigned char)X.eth.ether_dhost[2], (unsigned char)X.eth.ether_dhost[3], \
+	(unsigned char)X.eth.ether_dhost[4], (unsigned char)X.eth.ether_dhost[5], \
+	(unsigned char)X.eth.ether_shost[0], (unsigned char)X.eth.ether_shost[1], \
+	(unsigned char)X.eth.ether_shost[2], (unsigned char)X.eth.ether_shost[3], \
+	(unsigned char)X.eth.ether_shost[4], (unsigned char)X.eth.ether_shost[5], \
 	X.eth.ether_type);
 
 #if 0
@@ -152,19 +152,19 @@ static inline void set_pcaphdr(struct pcaprec_hdr_s *pcap, const char *buf)
  */
 static inline void set_ethhdr(struct ether_header *eth, const char *buf)
 {
-	eth->ether_dhost[5] = buf[0x0];
-	eth->ether_dhost[4] = buf[0x1];
-	eth->ether_dhost[3] = buf[0x2];
-	eth->ether_dhost[2] = buf[0x3];
-	eth->ether_dhost[1] = buf[0x4];
-	eth->ether_dhost[0] = buf[0x5];
+	eth->ether_dhost[5] = buf[0x5];
+	eth->ether_dhost[4] = buf[0x4];
+	eth->ether_dhost[3] = buf[0x3];
+	eth->ether_dhost[2] = buf[0x2];
+	eth->ether_dhost[1] = buf[0x1];
+	eth->ether_dhost[0] = buf[0x0];
 
-	eth->ether_shost[5] = buf[0x6];
-	eth->ether_shost[4] = buf[0x7];
-	eth->ether_shost[3] = buf[0x8];
-	eth->ether_shost[2] = buf[0x9];
-	eth->ether_shost[1] = buf[0xa];
-	eth->ether_shost[0] = buf[0xb];
+	eth->ether_shost[5] = buf[0xb];
+	eth->ether_shost[4] = buf[0xa];
+	eth->ether_shost[3] = buf[0x9];
+	eth->ether_shost[2] = buf[0x8];
+	eth->ether_shost[1] = buf[0x7];
+	eth->ether_shost[0] = buf[0x6];
 
 	eth->ether_type = ntohs(*(short *)&buf[0xc]);
 }
