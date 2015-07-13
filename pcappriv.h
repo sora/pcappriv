@@ -147,9 +147,28 @@ static inline void set_pcaphdr(struct pcaprec_hdr_s *pcap, const char *buf)
 	pcap->orig_len = h->orig_len;
 }
 
+
+static inline void eth_copy(char *dst, const char *src)
+{
+	unsigned short *a = (unsigned short *)dst;
+	const unsigned short *b = (const unsigned short *)src;
+
+	a[0] = b[0];
+	a[1] = b[1];
+	a[2] = b[2];
+}
+
 /*
  * set_ethhdr
  */
+static inline void set_ethhdr(struct ether_header *eth, const char *buf)
+{
+	eth_copy((char *)eth->ether_dhost, (const char *)&buf[0x0]);
+	eth_copy((char *)eth->ether_shost, (const char *)&buf[0x6]);
+	eth->ether_type = ntohs(*(short *)&buf[0xc]);
+}
+
+#if 0
 static inline void set_ethhdr(struct ether_header *eth, const char *buf)
 {
 	eth->ether_dhost[5] = buf[0x5];
@@ -168,6 +187,7 @@ static inline void set_ethhdr(struct ether_header *eth, const char *buf)
 
 	eth->ether_type = ntohs(*(short *)&buf[0xc]);
 }
+#endif
 
 /*
  * set_ip4hdr
