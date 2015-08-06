@@ -5,6 +5,8 @@ objs := $(srcs:.c=.o)
 
 CC := gcc
 CFLAGS := -O -Wall
+INC := -I/home/sora/wrk/github.com/wikimedia/analytics-libanon/build/include
+LIB := -L/home/sora/wrk/github.com/wikimedia/analytics-libanon/build/lib
 
 all: $(prog)
 
@@ -13,7 +15,7 @@ $(prog): $(objs)
 
 .SUFFIXES: .c .o
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) $(INC) $(LIB) -c $<
 
 .PHONY: clean
 clean:

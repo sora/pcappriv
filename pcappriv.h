@@ -15,6 +15,8 @@
 #include <netinet/ip_icmp.h>
 #include <sys/stat.h>
 
+#include <libanon.h>
+
 #define PCAP_MAGIC         (0xa1b2c3d4)
 #define PCAP_VERSION_MAJOR (0x2)
 #define PCAP_VERSION_MINOR (0x4)
