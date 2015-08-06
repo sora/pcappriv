@@ -26,7 +26,7 @@
 #define PKT_SIZE_MAX    (0x1FFF)
 #define PKT_SIZE_MIN    (0x1F)
 
-#define debug 1
+#define debug 0
 
 #define BITMASK4(v)	(((1 << (v)) - 1) << (32 - (v)))
 
@@ -86,6 +86,15 @@ struct pcap_pkt {
 	struct ether_header eth;
 	struct ip ip4;
 	struct ip6_hdr ip6;
+};
+
+/* cryptopan */
+struct anon_keys {
+	char passphase[0xFF];
+	anon_key_t *key;
+	anon_ipv4_t *ip;
+	anon_key_t *key6;
+	anon_ipv6_t *ip6;
 };
 
 /*
@@ -237,6 +246,11 @@ void set_signal (int);
 void sig_handler (int);
 
 int get_hash (const struct pcap_pkt *, unsigned int);
+
+struct in_addr anon4(struct anon_keys *, const struct pcap_pkt *);
+struct in6_addr anon6(struct anon_keys *, const struct pcap_pkt *);
+void anon_init(struct anon_keys *);
+void anon_release(struct anon_keys *);
 
 #endif
 

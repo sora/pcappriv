@@ -11,7 +11,7 @@ LIB := -L/home/sora/wrk/github.com/wikimedia/analytics-libanon/build/lib
 all: $(prog)
 
 $(prog): $(objs)
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) $(INC) $(LIB) -o $@ $^ -lanon
 
 .SUFFIXES: .c .o
 .c.o:

@@ -55,8 +55,11 @@ int main(int argc, char *argv[])
 	int ifd, ofd;
 	char fname[0xFF];
 	struct stat st;
+	struct anon_keys anon;
 
 	unsigned int subnet = 24;
+
+	strcat(anon.passphase, "hoge");
 
 	if (!(argc == 2 || argc == 3)) {
 		pr_err("Usage: ./split_pcap ./recv.pcap 24: argc=%d", argc);
@@ -105,6 +108,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	anon_init(&anon);
+
 	set_signal(SIGINT);
 
 	while (1) {
@@ -128,11 +133,15 @@ int main(int argc, char *argv[])
 		// ipv4 header
 		if (pkt.eth.ether_type == ETHERTYPE_IP) {
 			set_ip4hdr(&pkt.ip4, (char *)ibuf + ETHER_HDR_LEN);
+			pkt.ip4.ip_src = anon4(&anon, &pkt);
+			pkt.ip4.ip_dst = anon4(&anon, &pkt);
 			INFO_IP4(&pkt.ip4);
 
 		// ipv6 header
 		} else if (pkt.eth.ether_type == ETHERTYPE_IPV6) {
 			set_ip6hdr(&pkt.ip6, (char *)ibuf + ETHER_HDR_LEN);
+			pkt.ip6.ip6_src = anon6(&anon, &pkt);
+			pkt.ip6.ip6_dst = anon6(&anon, &pkt);
 			INFO_IP6(&pkt.ip6);
 		// ARP
 		//} else if (pkt.eth.ether_type == ETHERTYPE_ARP) {
@@ -155,6 +164,7 @@ int main(int argc, char *argv[])
 	}
 
 out:
+	anon_release(&anon);
 	close(ifd);
 	return 0;
 }
