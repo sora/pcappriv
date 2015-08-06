@@ -1,12 +1,5 @@
 #include "pcappriv.h"
 
-//static const char *passphase = "hoge";
-
-//static anon_key_t *key = NULL;
-//static anon_ipv4_t *ip = NULL;
-//static anon_key_t *key6  = NULL;
-//static anon_ipv6_t *ip6 = NULL;
-
 void anon_init(struct anon_keys *anon)
 {
 	anon->key = anon_key_new();
