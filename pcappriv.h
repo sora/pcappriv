@@ -34,7 +34,7 @@
 #define pr_err(S, ...) fprintf(stderr, \
                      "\x1b[1m\x1b[31merror:\x1b[0m " S "\n", ##__VA_ARGS__)
 #define pr_warn(S, ...) if(warn) fprintf(stderr, \
-                     "\x1b[1m\x1b[33mwarnn:\x1b[0m " S "\n", ##__VA_ARGS__)
+                     "\x1b[1m\x1b[33mwarn :\x1b[0m " S "\n", ##__VA_ARGS__)
 #define pr_debug(S, ...) if(debug) fprintf(stderr, \
                      "\x1b[1m\x1b[90mdebug:\x1b[0m " S "\n", ##__VA_ARGS__)
 
