@@ -7,11 +7,12 @@ static inline int create_pcapfile(char *fname, struct pcap_hdr_s *pcap_ghdr)
 {
 	int fd;
 
-	// create pcap file
 	fd = creat(fname, 0666);
 	if (fd != -1) {
 		// write pcap global header
-		write(fd, pcap_ghdr, sizeof(struct pcap_hdr_s));
+		if (write(fd, pcap_ghdr, sizeof(struct pcap_hdr_s)) == -1) {
+			return -1;
+		}
 		close(fd);
 	}
 
@@ -25,14 +26,17 @@ static inline int write_pktdata(char *fname, unsigned char *buf, struct pcap_pkt
 {
 	int fd;
 
-	// open pcap file
 	fd = open(fname, O_WRONLY | O_APPEND);
 	if (fd != -1) {
 		// write pcap packet header
-		write(fd, &pkt->pcap, sizeof(pkt->pcap));
+		if (write(fd, &pkt->pcap, sizeof(pkt->pcap)) == -1) {
+			return -1;
+		}
 
 		// write packet data
-		write(fd, buf, pkt->pcap.orig_len);
+		if (write(fd, buf, pkt->pcap.orig_len) == -1) {
+			return -1;
+		}
 		close(fd);
 	}
 
@@ -90,6 +94,17 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
+	// create output file
+	//sprintf(fname, "%d", get_hash(&pkt, subnet));
+	strcat(fname, "output.pcap");
+	if ((stat(fname, &st)) != 0) {
+		ofd = create_pcapfile(fname, &pcap_ghdr);
+		if (ofd == -1) {
+			pr_err("cannot create pcap file.");
+			goto out;
+		}
+	}
+
 	set_signal(SIGINT);
 
 	while (1) {
@@ -126,19 +141,6 @@ int main(int argc, char *argv[])
 		} else {
 			// temp: debug
 			pr_warn("EtherType: %04X is not supported", pkt.eth.ether_type);
-		}
-
-		// get pcap file name
-		sprintf(fname, "%d", get_hash(&pkt, subnet));
-		strcat(fname, ".pcap");
-
-		// create pcap file
-		if ((stat(fname, &st)) != 0) {
-			ofd = create_pcapfile(fname, &pcap_ghdr);
-			if (ofd == -1) {
-				pr_err("cannot create pcap file.");
-				break;
-			}
 		}
 
 		// write packet data

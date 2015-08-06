@@ -4,7 +4,7 @@ srcs := $(wildcard *.c)
 objs := $(srcs:.c=.o)
 
 CC := gcc
-CFLAGS := -Wall
+CFLAGS := -O -Wall
 
 all: $(prog)
 
