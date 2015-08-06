@@ -4,7 +4,7 @@ srcs := $(wildcard *.c)
 objs := $(srcs:.c=.o)
 
 CC := gcc
-CFLAGS := -O -Wall
+CFLAGS := -O2 -Wall
 INC := -I/home/sora/wrk/github.com/wikimedia/analytics-libanon/build/include
 LIB := -L/home/sora/wrk/github.com/wikimedia/analytics-libanon/build/lib
 

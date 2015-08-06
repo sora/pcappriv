@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	struct pcap_hdr_s pcap_ghdr;
 	struct pcap_pkt pkt;
 	unsigned char ibuf[PKT_SIZE_MAX];
-	int ifd, ofd;
+	int ifd, ofd, pkt_count = 0;
 	char fname[0xFF];
 	struct stat st;
 	struct anon_keys anon;
@@ -133,16 +133,16 @@ int main(int argc, char *argv[])
 		// ipv4 header
 		if (pkt.eth.ether_type == ETHERTYPE_IP) {
 			set_ip4hdr(&pkt.ip4, (char *)ibuf + ETHER_HDR_LEN);
+			INFO_IP4(pkt_count, &pkt.ip4);
 			pkt.ip4.ip_src = anon4(&anon, &pkt);
 			pkt.ip4.ip_dst = anon4(&anon, &pkt);
-			INFO_IP4(&pkt.ip4);
 
 		// ipv6 header
 		} else if (pkt.eth.ether_type == ETHERTYPE_IPV6) {
 			set_ip6hdr(&pkt.ip6, (char *)ibuf + ETHER_HDR_LEN);
+			INFO_IP6(pkt_count, &pkt.ip6);
 			pkt.ip6.ip6_src = anon6(&anon, &pkt);
 			pkt.ip6.ip6_dst = anon6(&anon, &pkt);
-			INFO_IP6(&pkt.ip6);
 		// ARP
 		//} else if (pkt.eth.ether_type == ETHERTYPE_ARP) {
 		//	set_arp(&pkt, (char *)ibuf + ETHER_HDR_LEN);
@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
 			pr_err("cannot write pcap file,");
 			break;
 		}
+		++pkt_count;
 
 		if (caught_signal)
 			break;

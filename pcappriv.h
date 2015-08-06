@@ -26,7 +26,7 @@
 #define PKT_SIZE_MAX    (0x1FFF)
 #define PKT_SIZE_MIN    (0x1F)
 
-#define debug 0
+#define debug 1
 
 #define BITMASK4(v)	(((1 << (v)) - 1) << (32 - (v)))
 
@@ -100,7 +100,7 @@ struct anon_keys {
 /*
  * INFO_IP4
  */
-static inline void INFO_IP4(struct ip *ip4)
+static inline void INFO_IP4(int pkt_count, struct ip *ip4)
 {
 	char src[INET_ADDRSTRLEN] = { 0 };
 	char dst[INET_ADDRSTRLEN] = { 0 };
@@ -108,15 +108,15 @@ static inline void INFO_IP4(struct ip *ip4)
 	inet_ntop(AF_INET, &ip4->ip_src, src, sizeof(src));
 	inet_ntop(AF_INET, &ip4->ip_dst, dst, sizeof(dst));
 
-	pr_debug("INFO_IP4> "
+	pr_debug("INFO_IP4> cnt:%d "
 	         "ver:%d, len:%d, proto:%X, srcip:%s, dstip:%s",
-	         (int)ip4->ip_v, (int)ntohs(ip4->ip_len), ip4->ip_p, src, dst);
+	         pkt_count, (int)ip4->ip_v, (int)ntohs(ip4->ip_len), ip4->ip_p, src, dst);
 }
 
 /*
  * INFO_IP6
  */
-static inline void INFO_IP6(struct ip6_hdr *ip6)
+static inline void INFO_IP6(int pkt_count, struct ip6_hdr *ip6)
 {
 	char src[INET6_ADDRSTRLEN] = { 0 };
 	char dst[INET6_ADDRSTRLEN] = { 0 };
@@ -124,9 +124,9 @@ static inline void INFO_IP6(struct ip6_hdr *ip6)
 	inet_ntop(AF_INET6, &ip6->ip6_src, src, sizeof(src));
 	inet_ntop(AF_INET6, &ip6->ip6_dst, dst, sizeof(dst));
 
-	pr_debug("INFO_IP6> "
+	pr_debug("INFO_IP6> cnt:%d "
 	         "ver:%d, len:%d, proto:XX, srcip:%s, dstip:%s",
-	         (int)((ip6->ip6_vfc >> 4) & 0xF), (int)ntohs(ip6->ip6_plen), src, dst);
+	         pkt_count, (int)((ip6->ip6_vfc >> 4) & 0xF), (int)ntohs(ip6->ip6_plen), src, dst);
 }
 
 /*
