@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
 	unsigned int subnet = 24;
 
-	strcat(anon.passphase, "hoge");
+	strcpy(anon.passphase, "hoge");
 
 	if (!(argc == 2 || argc == 3)) {
 		pr_err("Usage: ./split_pcap ./recv.pcap 24: argc=%d", argc);
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
 	// create output file
 	//sprintf(fname, "%d", get_hash(&pkt, subnet));
-	strcat(fname, "output.pcap");
+	strcpy(fname, "output.pcap");
 	if ((stat(fname, &st)) != 0) {
 		ofd = create_pcapfile(fname, &pcap_ghdr);
 		if (ofd == -1) {
