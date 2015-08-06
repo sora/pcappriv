@@ -23,10 +23,10 @@
 #define PCAP_SNAPLEN       (0xFFFF)
 #define PCAP_NETWORK       (0x1)      // linktype_ethernet
 
-#define PKT_SIZE_MAX    (0x1FFF)
+#define PKT_SIZE_MAX    (0x3FFF)
 #define PKT_SIZE_MIN    (0x1F)
 
-#define debug 1
+#define debug 0
 
 #define BITMASK4(v)	(((1 << (v)) - 1) << (32 - (v)))
 
@@ -109,7 +109,7 @@ static inline void INFO_IP4(int pkt_count, struct ip *ip4)
 	inet_ntop(AF_INET, &ip4->ip_dst, dst, sizeof(dst));
 
 	pr_debug("INFO_IP4> cnt:%d "
-	         "ver:%d, len:%d, proto:%X, srcip:%s, dstip:%s",
+	         "ver:%d, origlen:%d, proto:%X, srcip:%s, dstip:%s",
 	         pkt_count, (int)ip4->ip_v, (int)ntohs(ip4->ip_len), ip4->ip_p, src, dst);
 }
 
@@ -125,7 +125,7 @@ static inline void INFO_IP6(int pkt_count, struct ip6_hdr *ip6)
 	inet_ntop(AF_INET6, &ip6->ip6_dst, dst, sizeof(dst));
 
 	pr_debug("INFO_IP6> cnt:%d "
-	         "ver:%d, len:%d, proto:XX, srcip:%s, dstip:%s",
+	         "ver:%d, origlen:%d, proto:XX, srcip:%s, dstip:%s",
 	         pkt_count, (int)((ip6->ip6_vfc >> 4) & 0xF), (int)ntohs(ip6->ip6_plen), src, dst);
 }
 

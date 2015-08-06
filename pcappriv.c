@@ -121,7 +121,9 @@ int main(int argc, char *argv[])
 		// checking packet size
 		set_pcaphdr(&pkt.pcap, (char *)ibuf);
 		if ((pkt.pcap.orig_len < PKT_SIZE_MIN) || (pkt.pcap.orig_len > PKT_SIZE_MAX)) {
-			pr_warn("frame length: frame_len=%d", (int)pkt.pcap.orig_len);
+			pr_warn("Skip a packet: frame original length=%d", (int)pkt.pcap.orig_len);
+			lseek(ifd, pkt.pcap.orig_len, SEEK_CUR);
+			continue;
 		}
 
 		// ethernet header
