@@ -7,6 +7,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+
+#ifdef __FreeBSD__
+#include <netinet/in.h>
+#include <sys/socket.h>
+#endif
 #include <arpa/inet.h>
 #include <net/ethernet.h>
 #include <netinet/ip.h>
