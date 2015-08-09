@@ -22,4 +22,5 @@ $ make
 
 ```bash
 $ ./pcappriv hoge.pcap
+$ tshark -r output.pcap
 ```
