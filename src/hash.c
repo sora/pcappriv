@@ -8,52 +8,46 @@ void hash_release() {
 	kh_destroy(iv4, h);
 }
 
-void hash_put4(struct in_addr *ik, uint32_t *iv) {
+void hash_put4(struct in_addr ik, uint32_t i) {
 	int ret;
-	uint32_t k;
-	hash_v4_t x;
+	khint_t k;
 
-	x.key = ik->s_addr;
-	x.val = *iv;
-
-	k = kh_put(iv4, h, x, &ret);
+	k = kh_put(iv4, h, ik.s_addr, &ret);
 	if (!ret)
 		kh_del(iv4, h, k);
-	kh_value(h, k) = *iv;
+	//printf("k: %d, i: %d\n", (int)k, i);
+	kh_value(h, k) = i;
 }
 
-int hash_get4(struct in_addr *ik) {
-	int k, is_missing;
-	hash_v4_t x;
+int hash_get4(struct in_addr ik) {
+	int is_missing;
+	khint_t k;
 
-	x.key = ik->s_addr;
-
-	k = kh_get(iv4, h, x);
+	k = kh_get(iv4, h, ik.s_addr);
 	is_missing = (k == kh_end(h));
 
-	if (!is_missing)
+	if (is_missing)
 		printf("val is missing: %d\n", k);
 
-	return k;
+	return (int)kh_value(h, k);
 }
 
 
 // temorary
 void test() {
-	struct in_addr data;
+	struct in_addr addr4;
 	int data_size = 10000000;
 	uint32_t i;
 	int ret;
 
-	data.s_addr = 1111;
 
 	for (i = 0; i < data_size; ++i) {
-		hash_put4(&data, &i);
-		printf("put: key = %d, val = %d\n", data.s_addr, i);
-		ret = hash_get4(&data);
-		printf("get: key = %d, val = %d\n", data.s_addr, ret);
+		addr4.s_addr = i;
+		hash_put4(addr4, i+4);
+		ret = hash_get4(addr4);
+		if (ret != i+4)
+			printf("get: key = %d, i = %d, ret = %d\n", addr4.s_addr, i, ret);
 	}
-	//printf("[hash_test] size: %u (sizeof=%ld)\n", kh_size(h), sizeof(hash_v4_t));
 }
 
 void bench(void (*f)(void)) {
