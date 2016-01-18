@@ -28,12 +28,14 @@ uint32_t hash_get4(struct in_addr ik) {
 
 	k = kh_get(iv4, h4, ik.s_addr);
 	is_missing = (k == kh_end(h4));
-	if (is_missing)
-		printf("4:val is missing: %d\n", k);
+	if (is_missing) {
+		pr_warn("4:val is missing: %d\n", k);
+		return 0;
+	}
 
 	v4 = kh_value(h4, k);
 	if (v4.key.s_addr != ik.s_addr)
-		printf("4:key is mismatch: %d, %d\n", v4.key.s_addr, ik.s_addr);
+		pr_warn("4:key is mismatch: %d, %d\n", v4.key.s_addr, ik.s_addr);
 
 	return v4.val;
 }

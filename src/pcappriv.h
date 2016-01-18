@@ -37,8 +37,8 @@
 
 #define hash_data_size    10000000
 
-#define warn  1
-#define debug 1
+#define warn  0
+#define debug 0
 
 #define BITMASK4(v)	(((1 << (v)) - 1) << (32 - (v)))
 
