@@ -12,16 +12,34 @@
 
 #include "khash.h"
 
-//typedef struct {
-//	uint32_t key;
-//	uint32_t val;
-//} hash_v4_t;
-#define hash_eq(a, b) ((a).key == (b).key)
-#define hash_func(a) ((a).key)
+#define hash_data_size    10000000
 
-//KHASH_INIT(iv4, hash_v4_t, char, 0, hash_func, hash_eq)
-KHASH_MAP_INIT_INT(iv4, uint32_t)
+typedef struct {
+	struct in_addr key;
+	uint32_t val;
+} hash4_t;
+KHASH_MAP_INIT_INT(iv4, hash4_t)
 
-khash_t(iv4) *h;
+typedef struct {
+	struct in6_addr key;
+	uint32_t val;
+} hash6_t;
+KHASH_MAP_INIT_INT(iv6, hash6_t)
+khash_t(iv6) *h6;
+
+khash_t(iv4) *h4;
+
+static inline uint32_t addr6_hash(const struct in6_addr ip6) {
+	return (ip6.s6_addr32[3] ^ ip6.s6_addr32[2] ^
+	        ip6.s6_addr32[1] ^ ip6.s6_addr32[0]);
+}
+
+static inline uint32_t addr6_eq(const struct in6_addr a, const struct in6_addr b) {
+	return ((a.s6_addr32[3] == b.s6_addr32[3]) &&
+	        (a.s6_addr32[2] == b.s6_addr32[2]) &&
+	        (a.s6_addr32[1] == b.s6_addr32[1]) &&
+	        (a.s6_addr32[0] == b.s6_addr32[0]));
+}
 
 #endif /* _hash_h_ */
+

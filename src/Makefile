@@ -9,6 +9,6 @@ all:$(PROGS)
 clean:
 		rm -fr $(PROGS) *.dSYM a.out *.o
 
-hash: hash.c khash.h
+hash: hash.c hash.h khash.h
 		$(CC) $(CFLAGS) -o $@ hash.c
 
