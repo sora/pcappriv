@@ -208,8 +208,14 @@ static inline void set_ip6hdr(struct ip6_hdr *ip6, const char *buf)
 
 	ip6->ip6_vfc  = p->ip6_vfc;
 	ip6->ip6_plen = p->ip6_plen;
-	ip6->ip6_src  = p->ip6_src;
-	ip6->ip6_dst  = p->ip6_dst;
+	ip6->ip6_src.s6_addr32[3] = p->ip6_src.s6_addr32[3];
+	ip6->ip6_src.s6_addr32[2] = p->ip6_src.s6_addr32[2];
+	ip6->ip6_src.s6_addr32[1] = p->ip6_src.s6_addr32[1];
+	ip6->ip6_src.s6_addr32[0] = p->ip6_src.s6_addr32[0];
+	ip6->ip6_dst.s6_addr32[3] = p->ip6_dst.s6_addr32[3];
+	ip6->ip6_dst.s6_addr32[2] = p->ip6_dst.s6_addr32[2];
+	ip6->ip6_dst.s6_addr32[1] = p->ip6_dst.s6_addr32[1];
+	ip6->ip6_dst.s6_addr32[0] = p->ip6_dst.s6_addr32[0];
 }
 
 /*

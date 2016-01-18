@@ -18,16 +18,18 @@ typedef struct {
 	struct in_addr key;
 	uint32_t val;
 } hash4_t;
-KHASH_MAP_INIT_INT(iv4, hash4_t)
 
 typedef struct {
 	struct in6_addr key;
 	uint32_t val;
 } hash6_t;
+
+KHASH_MAP_INIT_INT(iv4, hash4_t)
 KHASH_MAP_INIT_INT(iv6, hash6_t)
-khash_t(iv6) *h6;
 
 khash_t(iv4) *h4;
+khash_t(iv6) *h6;
+
 
 static inline uint32_t addr6_hash(const struct in6_addr ip6) {
 	return (ip6.s6_addr32[3] ^ ip6.s6_addr32[2] ^
