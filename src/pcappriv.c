@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 	}
 
 	anon_init(&anon);
-	hash_init();
+	cache_init();
 
 	set_signal(SIGINT);
 
@@ -137,62 +137,16 @@ int main(int argc, char *argv[])
 		if (pkt.eth.ether_type == ETHERTYPE_IP) {
 			set_ip4hdr(&pkt.ip4, (char *)ibuf + ETHER_HDR_LEN);
 			INFO_IP4(pkt_count, &pkt.ip4);
-
-			uint32_t hash_val;
-			struct in_addr ip_tmp, anon_tmp;
-
-			hash_val = hash_get4(pkt.ip4.ip_src);
-			ip_tmp = pkt.ip4.ip_src;
-			if (hash_val) {
-				pkt.ip4.ip_src.s_addr = hash_val;
-			} else {
-				anon_tmp = anon4(&anon, &pkt);
-				pkt.ip4.ip_src = anon_tmp;
-				hash_put4(ip_tmp, anon_tmp.s_addr);
-			}
-
-			hash_val = hash_get4(pkt.ip4.ip_dst);
-			ip_tmp = pkt.ip4.ip_dst;
-			if (hash_val) {
-				pkt.ip4.ip_dst.s_addr = hash_val;
-			} else {
-				anon_tmp = anon4(&anon, &pkt);
-				pkt.ip4.ip_dst = anon_tmp;
-				hash_put4(ip_tmp, anon_tmp.s_addr);
-			}
-
+			anon4(&anon, &pkt.ip4.ip_dst);
+			anon4(&anon, &pkt.ip4.ip_src);
 
 		// ipv6 header
 		} else if (pkt.eth.ether_type == ETHERTYPE_IPV6) {
 			set_ip6hdr(&pkt.ip6, (char *)ibuf + ETHER_HDR_LEN);
 			INFO_IP6(pkt_count, &pkt.ip6);
-			pkt.ip6.ip6_src = anon6(&anon, &pkt);
-			pkt.ip6.ip6_dst = anon6(&anon, &pkt);
+			anon6(&anon, &pkt.ip6.ip6_dst);
+			anon6(&anon, &pkt.ip6.ip6_src);
 
-#if 0
-			uint32_t hash_val;
-			struct in6_addr ip_tmp, anon_tmp;
-
-			hash_val = hash_get6(pkt.ip6.ip6_src);
-			ip_tmp = pkt.ip6.ip6_src;
-			if (hash_val) {
-				pkt.ip6.ip_src.s_addr = hash_val;
-			} else {
-				anon_tmp = anon6(&anon, &pkt);
-				pkt.ip6.ip_src = anon_tmp;
-				hash_put6(ip_tmp, anon_tmp.s_addr);
-			}
-
-			hash_val = hash_get6(pkt.ip6.ip6_dst);
-			ip_tmp = pkt.ip6.ip6_dst;
-			if (hash_val) {
-				pkt.ip6.ip_dst.s_addr = hash_val;
-			} else {
-				anon_tmp = anon6(&anon, &pkt);
-				pkt.ip6.ip_dst = anon_tmp;
-				hash_put6(ip_tmp, anon_tmp.s_addr);
-			}
-#endif
 		// ARP
 		//} else if (pkt.eth.ether_type == ETHERTYPE_ARP) {
 		//	set_arp(&pkt, (char *)ibuf + ETHER_HDR_LEN);
@@ -216,7 +170,7 @@ int main(int argc, char *argv[])
 
 out:
 	anon_release(&anon);
-	hash_release();
+	cache_release();
 	close(ifd);
 	return 0;
 }

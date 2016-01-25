@@ -37,7 +37,7 @@
 
 #define hash_data_size    10000000
 
-#define warn  0
+#define warn  1
 #define debug 0
 
 #define BITMASK4(v)	(((1 << (v)) - 1) << (32 - (v)))
@@ -112,12 +112,12 @@ struct anon_keys {
 /* khash */
 typedef struct {
 	struct in_addr key;
-	uint32_t val;
+	struct in_addr val;
 } hash4_t;
 
 typedef struct {
 	struct in6_addr key;
-	uint32_t val;
+	struct in6_addr val;
 } hash6_t;
 
 /*
@@ -252,19 +252,41 @@ static inline void set_arp(struct pcap_pkt *pkt, const char *buf)
 /*
  * addr6_hash
  */
-static inline uint32_t addr6_hash(const struct in6_addr ip6) {
-	return (ip6.s6_addr32[3] ^ ip6.s6_addr32[2] ^
-	        ip6.s6_addr32[1] ^ ip6.s6_addr32[0]);
+static inline uint32_t addr6_hash(const struct in6_addr *ip6) {
+	return (ip6->s6_addr32[3] ^ ip6->s6_addr32[2] ^
+	        ip6->s6_addr32[1] ^ ip6->s6_addr32[0]);
 }
 
 /*
  * addr6_eq
  */
-static inline uint32_t addr6_eq(const struct in6_addr a, const struct in6_addr b) {
-	return ((a.s6_addr32[3] == b.s6_addr32[3]) &&
-	        (a.s6_addr32[2] == b.s6_addr32[2]) &&
-	        (a.s6_addr32[1] == b.s6_addr32[1]) &&
-	        (a.s6_addr32[0] == b.s6_addr32[0]));
+static inline uint32_t addr6_eq(const struct in6_addr *a, const struct in6_addr *b) {
+	return ((a->s6_addr32[3] == b->s6_addr32[3]) &&
+	        (a->s6_addr32[2] == b->s6_addr32[2]) &&
+	        (a->s6_addr32[1] == b->s6_addr32[1]) &&
+	        (a->s6_addr32[0] == b->s6_addr32[0]));
+}
+
+/*
+ * addr6_copy
+ */
+static inline void addr6_copy(struct in6_addr *a, const struct in6_addr *b) {
+	a->s6_addr32[3] = b->s6_addr32[3];
+	a->s6_addr32[2] = b->s6_addr32[2];
+	a->s6_addr32[1] = b->s6_addr32[1];
+	a->s6_addr32[0] = b->s6_addr32[0];
+}
+
+static inline void pr_in6(const struct in6_addr *addr) {
+	printf("%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x\n",
+	(int)addr->s6_addr[0], (int)addr->s6_addr[1],
+	(int)addr->s6_addr[2], (int)addr->s6_addr[3],
+	(int)addr->s6_addr[4], (int)addr->s6_addr[5],
+	(int)addr->s6_addr[6], (int)addr->s6_addr[7],
+	(int)addr->s6_addr[8], (int)addr->s6_addr[9],
+	(int)addr->s6_addr[10], (int)addr->s6_addr[11],
+	(int)addr->s6_addr[12], (int)addr->s6_addr[13],
+	(int)addr->s6_addr[14], (int)addr->s6_addr[15]);
 }
 
 /* khash */
@@ -279,19 +301,18 @@ void set_signal (int);
 void sig_handler (int);
 
 // libanon
-struct in_addr anon4(struct anon_keys *, const struct pcap_pkt *);
-struct in6_addr anon6(struct anon_keys *, const struct pcap_pkt *);
+void anon4(struct anon_keys *, struct in_addr *);
+void anon6(struct anon_keys *, struct in6_addr *);
 void anon_init(struct anon_keys *);
 void anon_release(struct anon_keys *);
 
-// khash
-void hash_init();
-void hash_release();
-void hash_put4(struct in_addr, uint32_t);
-uint32_t hash_get4(struct in_addr);
-void hash_put6(struct in6_addr, uint32_t);
-uint32_t hash_get6(struct in6_addr);
-
+// cache
+void cache_init();
+void cache_release();
+void cache_put4(const struct in_addr *, const struct in_addr *);
+int cache_get4(struct in_addr *);
+void cache_put6(const struct in6_addr *, const struct in6_addr *);
+int cache_get6(struct in6_addr *);
 
 #endif
 
