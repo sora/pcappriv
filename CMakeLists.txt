@@ -11,7 +11,7 @@ link_directories(/home/sora/wrk/src/github.com/wikimedia/analytics-libanon/build
 
 add_executable(pcappriv
 	src/anon.c
-	src/hash.c
+	src/cache.c
 	src/pcappriv.c
 	src/pcappriv.h
 	src/signal.c
