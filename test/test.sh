@@ -1,3 +1,4 @@
 (cd ..; make clean)
 (cd ..; make)
-../pcappriv pcap/moge.pcap
+rm -f output.pcap
+../pcappriv pcap/hige.pcap

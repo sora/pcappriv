@@ -28,21 +28,13 @@ static inline int write_pktdata(char *fname, unsigned char *buf, struct pcap_pkt
 
 	fd = open(fname, O_WRONLY | O_APPEND);
 	if (fd != -1) {
-		// write pcap packet header
-		if (write(fd, &pkt->pcap, sizeof(pkt->pcap)) == -1) {
+		if (write(fd, buf, sizeof(struct pcaprec_hdr_s)+pkt->pcap.orig_len) == -1) {
 			return -1;
 		}
-
-		// write packet data
-		if (write(fd, buf, pkt->pcap.orig_len) == -1) {
-			return -1;
-		}
-		close(fd);
 	}
-
+	close(fd);
 	return fd;
 }
-
 
 /*
  * main
@@ -50,19 +42,20 @@ static inline int write_pktdata(char *fname, unsigned char *buf, struct pcap_pkt
 int main(int argc, char *argv[])
 {
 	struct pcap_hdr_s pcap_ghdr;
-	struct pcap_pkt pkt;
 	unsigned char ibuf[PKT_SIZE_MAX];
+	struct pcap_pkt *pkt = (struct pcap_pkt *)&ibuf[0];
 	int ifd, ofd, pkt_count = 0;
 	char fname[0xFF];
 	struct stat st;
 	struct anon_keys anon;
+	u_int16_t ethtype;
 
 	unsigned int subnet = 24;
 
 	strcpy(anon.passphase, "hoge");
 
 	if (!(argc == 2 || argc == 3)) {
-		pr_err("Usage: ./split_pcap ./recv.pcap 24: argc=%d", argc);
+		pr_err("Usage: ./pcappriv ./recv.pcap 24: argc=%d", argc);
 		return 1;
 	}
 	if (argc == 3)
@@ -98,7 +91,6 @@ int main(int argc, char *argv[])
 	}
 
 	// create output file
-	//sprintf(fname, "%d", get_hash(&pkt, subnet));
 	strcpy(fname, "output.pcap");
 	if ((stat(fname, &st)) != 0) {
 		ofd = create_pcapfile(fname, &pcap_ghdr);
@@ -114,50 +106,46 @@ int main(int argc, char *argv[])
 	set_signal(SIGINT);
 
 	while (1) {
-
 		// read pcap header
 		if (read(ifd, ibuf, sizeof(struct pcaprec_hdr_s)) <= 0)
 			break;
 
 		// checking packet size
-		set_pcaphdr(&pkt.pcap, (char *)ibuf);
-		if ((pkt.pcap.orig_len < PKT_SIZE_MIN) || (pkt.pcap.orig_len > PKT_SIZE_MAX)) {
-			pr_warn("Skip a packet: frame original length=%d", (int)pkt.pcap.orig_len);
-			lseek(ifd, pkt.pcap.orig_len, SEEK_CUR);
+		if ((pkt->pcap.orig_len < PKT_SIZE_MIN) || (pkt->pcap.orig_len > PKT_SIZE_MAX)) {
+			pr_warn("Skip a packet: frame original length=%d", (int)pkt->pcap.orig_len);
+			lseek(ifd, pkt->pcap.orig_len, SEEK_CUR); // skip the packet data
 			continue;
 		}
 
-		// ethernet header
-		if (read(ifd, ibuf, pkt.pcap.orig_len) <= 0)
+		// read packet data
+		if (read(ifd, ibuf+sizeof(struct pcaprec_hdr_s), pkt->pcap.orig_len) <= 0)
 			break;
-		set_ethhdr(&pkt.eth, (char *)ibuf);
 		INFO_ETH(pkt);
 
+		ethtype = ntohs(pkt->eth.ether_type);
 		// ipv4 header
-		if (pkt.eth.ether_type == ETHERTYPE_IP) {
-			set_ip4hdr(&pkt.ip4, (char *)ibuf + ETHER_HDR_LEN);
-			INFO_IP4(pkt_count, &pkt.ip4);
-			anon4(&anon, &pkt.ip4.ip_dst);
-			anon4(&anon, &pkt.ip4.ip_src);
+		if (ethtype == ETHERTYPE_IP) {
+			INFO_IP4(pkt_count, &pkt->ip4);
+			anon4(&anon, &pkt->ip4.ip_dst);
+			anon4(&anon, &pkt->ip4.ip_src);
 
 		// ipv6 header
-		} else if (pkt.eth.ether_type == ETHERTYPE_IPV6) {
-			set_ip6hdr(&pkt.ip6, (char *)ibuf + ETHER_HDR_LEN);
-			INFO_IP6(pkt_count, &pkt.ip6);
-			anon6(&anon, &pkt.ip6.ip6_dst);
-			anon6(&anon, &pkt.ip6.ip6_src);
+		} else if (ethtype == ETHERTYPE_IPV6) {
+			INFO_IP6(pkt_count, &pkt->ip6);
+			anon6(&anon, &pkt->ip6.ip6_dst);
+			anon6(&anon, &pkt->ip6.ip6_src);
 
 		// ARP
-		//} else if (pkt.eth.ether_type == ETHERTYPE_ARP) {
+		//} else if (ethtype == ETHERTYPE_ARP) {
 		//	set_arp(&pkt, (char *)ibuf + ETHER_HDR_LEN);
 		// unknown Ethernet Type
 		} else {
 			// temp: debug
-			pr_warn("EtherType: %04X is not supported", pkt.eth.ether_type);
+			pr_warn("EtherType: %04X is not supported", ethtype);
 		}
 
 		// write packet data
-		ofd = write_pktdata(fname, &ibuf[0], &pkt);
+		ofd = write_pktdata(fname, &ibuf[0], pkt);
 		if (ofd == -1) {
 			pr_err("cannot write pcap file,");
 			break;

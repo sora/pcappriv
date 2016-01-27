@@ -54,13 +54,13 @@ pr_debug("INFO_ETH> " \
 	"ether_dhost: %02x:%02x:%02x:%02x:%02x:%02x, " \
 	"ether_shost: %02x:%02x:%02x:%02x:%02x:%02x, " \
 	"ether_type: %04x", \
-	(unsigned char)X.eth.ether_dhost[0], (unsigned char)X.eth.ether_dhost[1], \
-	(unsigned char)X.eth.ether_dhost[2], (unsigned char)X.eth.ether_dhost[3], \
-	(unsigned char)X.eth.ether_dhost[4], (unsigned char)X.eth.ether_dhost[5], \
-	(unsigned char)X.eth.ether_shost[0], (unsigned char)X.eth.ether_shost[1], \
-	(unsigned char)X.eth.ether_shost[2], (unsigned char)X.eth.ether_shost[3], \
-	(unsigned char)X.eth.ether_shost[4], (unsigned char)X.eth.ether_shost[5], \
-	X.eth.ether_type);
+	(unsigned char)X->eth.ether_dhost[0], (unsigned char)X->eth.ether_dhost[1], \
+	(unsigned char)X->eth.ether_dhost[2], (unsigned char)X->eth.ether_dhost[3], \
+	(unsigned char)X->eth.ether_dhost[4], (unsigned char)X->eth.ether_dhost[5], \
+	(unsigned char)X->eth.ether_shost[0], (unsigned char)X->eth.ether_shost[1], \
+	(unsigned char)X->eth.ether_shost[2], (unsigned char)X->eth.ether_shost[3], \
+	(unsigned char)X->eth.ether_shost[4], (unsigned char)X->eth.ether_shost[5], \
+	X->eth.ether_type);
 
 #if 0
 #define INFO_IP4(X) \
@@ -96,9 +96,11 @@ struct pcaprec_hdr_s {
 struct pcap_pkt {
 	struct pcaprec_hdr_s pcap;
 	struct ether_header eth;
-	struct ip ip4;
-	struct ip6_hdr ip6;
-};
+	union {
+		struct ip ip4;
+		struct ip6_hdr ip6;
+	};
+} __attribute__((packed));
 
 /* cryptopan */
 struct anon_keys {
