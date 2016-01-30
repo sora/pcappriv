@@ -1,39 +1,19 @@
 #include "pcappriv.h"
 
 /*
- * create_pcapfile
+ * write_ghdr
  */
-static inline int create_pcapfile(char *fname, struct pcap_hdr_s *pcap_ghdr)
+static inline int write_ghdr(int fd, struct pcap_hdr_s *pcap_ghdr)
 {
-	int fd;
-
-	fd = creat(fname, 0666);
-	if (fd != -1) {
-		// write pcap global header
-		if (write(fd, pcap_ghdr, sizeof(struct pcap_hdr_s)) == -1) {
-			return -1;
-		}
-		close(fd);
-	}
-
-	return fd;
+	return write(fd, pcap_ghdr, sizeof(struct pcap_hdr_s));
 }
 
 /*
  * write_pktdata
  */
-static inline int write_pktdata(char *fname, unsigned char *buf, struct pcap_pkt *pkt)
+static inline int write_pktdata(int fd, unsigned char *buf, struct pcap_pkt *pkt)
 {
-	int fd;
-
-	fd = open(fname, O_WRONLY | O_APPEND);
-	if (fd != -1) {
-		if (write(fd, buf, sizeof(struct pcaprec_hdr_s)+pkt->pcap.orig_len) == -1) {
-			return -1;
-		}
-	}
-	close(fd);
-	return fd;
+	return write(fd, buf, sizeof(struct pcaprec_hdr_s) + pkt->pcap.orig_len);
 }
 
 /*
@@ -44,24 +24,15 @@ int main(int argc, char *argv[])
 	struct pcap_hdr_s pcap_ghdr;
 	unsigned char ibuf[PKT_SIZE_MAX];
 	struct pcap_pkt *pkt = (struct pcap_pkt *)&ibuf[0];
-	int ifd, ofd, pkt_count = 0;
+	int ret, ifd, ofd, pkt_count = 0;
 	char fname[0xFF];
-	struct stat st;
 	struct anon_keys anon;
 	u_int16_t ethtype;
 
-	unsigned int subnet = 24;
-
 	strcpy(anon.passphase, "hoge");
 
-	if (!(argc == 2 || argc == 3)) {
-		pr_err("Usage: ./pcappriv ./recv.pcap 24: argc=%d", argc);
-		return 1;
-	}
-	if (argc == 3)
-		subnet = atoi(argv[2]);
-	if (subnet >= 32) {
-		pr_err("subnet is wrong format: %d", subnet);
+	if (argc != 2) {
+		pr_err("Usage: ./pcappriv ./recv.pcap: argc=%d", argc);
 		return 1;
 	}
 
@@ -92,17 +63,19 @@ int main(int argc, char *argv[])
 
 	// create output file
 	strcpy(fname, "output.pcap");
-	if ((stat(fname, &st)) != 0) {
-		ofd = create_pcapfile(fname, &pcap_ghdr);
-		if (ofd == -1) {
-			pr_err("cannot create pcap file.");
-			goto out;
-		}
+	ofd = creat(fname, 0666);
+	if (ofd == -1) {
+		pr_err("cannot create pcap file.");
+		goto out;
+	}
+	ret = write_ghdr(ofd, &pcap_ghdr);
+	if (ret == -1) {
+		pr_err("cannot write ghdr.");
+		goto out;
 	}
 
 	anon_init(&anon);
 	cache_init();
-
 	set_signal(SIGINT);
 
 	while (1) {
@@ -145,8 +118,8 @@ int main(int argc, char *argv[])
 		}
 
 		// write packet data
-		ofd = write_pktdata(fname, &ibuf[0], pkt);
-		if (ofd == -1) {
+		ret = write_pktdata(ofd, &ibuf[0], pkt);
+		if (ret == -1) {
 			pr_err("cannot write pcap file,");
 			break;
 		}
@@ -160,6 +133,7 @@ out:
 	anon_release(&anon);
 	cache_release();
 	close(ifd);
+	//close(ofd);
 	return 0;
 }
 
