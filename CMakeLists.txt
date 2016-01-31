@@ -4,7 +4,7 @@ PROJECT(pcappriv C)
 add_definitions("-Wall -O2")
 
 SET(VERSION_MAJOR "0")
-SET(VERSION_MINOR "2")
+SET(VERSION_MINOR "3")
 
 include_directories(/home/sora/wrk/src/github.com/wikimedia/analytics-libanon/build/include)
 link_directories(/home/sora/wrk/src/github.com/wikimedia/analytics-libanon/build/lib)
