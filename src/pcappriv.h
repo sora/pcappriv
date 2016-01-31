@@ -25,6 +25,12 @@
 #include <libanon.h>
 #include "khash.h"
 
+#ifdef __FreeBSD__
+#define s6_addr8  __u6_addr.__u6_addr8
+#define s6_addr16 __u6_addr.__u6_addr16
+#define s6_addr32 __u6_addr.__u6_addr32
+#endif
+
 
 #define PCAP_MAGIC         (0xa1b2c3d4)
 #define PCAP_VERSION_MAJOR (0x2)
