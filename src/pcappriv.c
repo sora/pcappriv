@@ -1,22 +1,6 @@
 #include "pcappriv.h"
 
 /*
- * write_ghdr
- */
-static inline int write_ghdr(int fd, struct pcap_hdr_s *pcap_ghdr)
-{
-	return write(fd, pcap_ghdr, sizeof(struct pcap_hdr_s));
-}
-
-/*
- * write_pktdata
- */
-static inline int write_pktdata(int fd, unsigned char *buf, struct pcap_pkt *pkt)
-{
-	return write(fd, buf, sizeof(struct pcaprec_hdr_s) + pkt->pcap.orig_len);
-}
-
-/*
  * main
  */
 int main(int argc, char *argv[])
@@ -24,7 +8,8 @@ int main(int argc, char *argv[])
 	struct pcap_hdr_s pcap_ghdr;
 	unsigned char ibuf[PKT_SIZE_MAX];
 	struct pcap_pkt *pkt = (struct pcap_pkt *)&ibuf[0];
-	int ret, ifd, ofd, pkt_count = 0;
+	int ret, pkt_count = 0;
+	FILE *ifp, *ofp = NULL;
 	char fname[0xFF];
 	struct anon_keys anon;
 	u_int16_t ethtype;
@@ -33,19 +18,20 @@ int main(int argc, char *argv[])
 
 	if (argc != 2) {
 		pr_err("Usage: ./pcappriv ./recv.pcap: argc=%d", argc);
-		return 1;
+		exit(EXIT_FAILURE);
 	}
 
-	ifd = open(argv[1], O_RDONLY);
-	if (ifd < 0) {
+	ifp = fopen(argv[1], "rb");
+	if (ifp == NULL) {
 		pr_err("cannot open pcap file: %s", argv[1]);
-		return 1;
+		exit(EXIT_FAILURE);
 	}
 
 	// check global pcap header
-	if (read(ifd, ibuf, sizeof(struct pcap_hdr_s)) <= 0) {
-		pr_err("input file is too short");
-		return 1;
+	ret = fread(ibuf, sizeof(struct pcap_hdr_s), 1, ifp);
+	if (ret < 1) {
+		pr_err("size of fread is too short: pcap_hdr_s");
+		exit(EXIT_FAILURE);
 	}
 
 	set_global_pcaphdr(&pcap_ghdr, (char *)ibuf);
@@ -63,13 +49,14 @@ int main(int argc, char *argv[])
 
 	// create output file
 	strcpy(fname, "output.pcap");
-	ofd = creat(fname, 0666);
-	if (ofd == -1) {
-		pr_err("cannot create pcap file.");
+	ofp = fopen(fname, "wb");
+	if (ofp == NULL) {
+		pr_err("cannot create output pcap file.");
 		goto out;
 	}
-	ret = write_ghdr(ofd, &pcap_ghdr);
-	if (ret == -1) {
+
+	ret = fwrite(&pcap_ghdr, sizeof(struct pcap_hdr_s), 1, ofp);
+	if (ret < 1) {
 		pr_err("cannot write ghdr.");
 		goto out;
 	}
@@ -80,19 +67,25 @@ int main(int argc, char *argv[])
 
 	while (1) {
 		// read pcap header
-		if (read(ifd, ibuf, sizeof(struct pcaprec_hdr_s)) <= 0)
+		ret = fread(ibuf, sizeof(struct pcaprec_hdr_s), 1, ifp);
+		if (ret < 1) {
+			pr_debug("size of fread is too short: pcaprec_hdr_s");
 			break;
+		}
 
 		// checking packet size
 		if ((pkt->pcap.orig_len < PKT_SIZE_MIN) || (pkt->pcap.orig_len > PKT_SIZE_MAX)) {
 			pr_warn("Skip a packet: frame original length=%d", (int)pkt->pcap.orig_len);
-			lseek(ifd, pkt->pcap.orig_len, SEEK_CUR); // skip the packet data
+			fseek(ifp, pkt->pcap.incl_len, SEEK_CUR); // skip the packet data
 			continue;
 		}
 
 		// read packet data
-		if (read(ifd, ibuf+sizeof(struct pcaprec_hdr_s), pkt->pcap.orig_len) <= 0)
+		ret = fread(ibuf+sizeof(struct pcaprec_hdr_s), pkt->pcap.incl_len, 1, ifp);
+		if (ret < 1) {
+			pr_err("size of fread is too short: pcap data");
 			break;
+		}
 		INFO_ETH(pkt);
 
 		ethtype = ntohs(pkt->eth.ether_type);
@@ -118,9 +111,9 @@ int main(int argc, char *argv[])
 		}
 
 		// write packet data
-		ret = write_pktdata(ofd, &ibuf[0], pkt);
-		if (ret == -1) {
-			pr_err("cannot write pcap file,");
+		ret = fwrite(ibuf, sizeof(struct pcaprec_hdr_s) + pkt->pcap.incl_len, 1, ofp);
+		if (ret < 1) {
+			pr_err("cannot write pcap file: packet data");
 			break;
 		}
 		++pkt_count;
@@ -132,8 +125,8 @@ int main(int argc, char *argv[])
 out:
 	anon_release(&anon);
 	cache_release();
-	close(ifd);
-	//close(ofd);
+	fclose(ifp);
+	fclose(ofp);
 	return 0;
 }
 
